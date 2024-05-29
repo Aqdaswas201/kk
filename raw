@@ -1,6 +1,5 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
-
 local Window = Rayfield:CreateWindow({
    Name = "sols rng",
    LoadingTitle = "Loading...",
@@ -25,4 +24,230 @@ local Window = Rayfield:CreateWindow({
       GrabKeyFromSite = true,
       Key = {"aqdasbuthelp"}
    }
+})
+
+local MainTab = Window:CreateTab("auto grab", nil) -- Title, Image
+local MainSection = MainTab:CreateSection("auto grab😴")
+
+Rayfield:Notify({
+   Title = "Loaded",
+   Content = "enjoy lil bro",
+   Duration = 6.5,
+   Image = 4483362458,
+   Actions = { -- Notification Buttons
+      Ignore = {
+         Name = "Okay!",
+         Callback = function()
+         print("The user tapped Okay!")
+      end
+   },
+},
+})
+
+local Button = MainTab:CreateButton({
+   Name = "Button Example",
+   Callback = function()
+        local settings = {
+    grabber = false,
+    lucky = false,
+    speed = false,
+    coins = false,
+    biomeitems = false,
+    pathfind = false,
+}
+
+local items = {
+    "Lucky Potion",
+    "Speed Potion",
+    "Coin",
+    "Gilded Coin",
+    "Icicle",
+    "Rainy Bottle",
+    "Eternal Flame",
+    "NULL?",
+    "Corruptaine",
+    "Wind essence",
+    "Piece of Star"
+}
+
+local function Pathfind(player, item)
+    local pathfindingService = game:GetService("PathfindingService")
+    local character = player.Character
+    local rootPart = character and character.HumanoidRootPart
+
+    if rootPart then
+        local path = pathfindingService:CreatePath({
+            AgentRadius = 2,
+            AgentHeight = 5,
+            AgentCanJump = true,
+            AgentJumpHeight = 10,
+            AgentMaxSlope = 45,
+        })
+
+        path:ComputeAsync(rootPart.Position, item.Position)
+        path:MoveTo(item.Position)
+        path:Wait()
+    end
+end
+
+local function addImportant(item)
+    local billboardGui = Instance.new("BillboardGui")
+    billboardGui.Size = UDim2.new(0, 100, 0, 50)
+    billboardGui.Adornee = item
+    billboardGui.StudsOffset = Vector3.new(0, 3, 0)
+    billboardGui.AlwaysOnTop = true
+
+    local textLabel = Instance.new("TextLabel", billboardGui)
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextColor3 = Color3.new(1, 1, 1)
+    textLabel.TextScaled = true
+    textLabel.TextWrapped = true
+    textLabel.Text = item.Name
+
+    local highlight = Instance.new("Highlight")
+    highlight.Color3 = Color3.new(1, 1, 1)
+    highlight.Transparency = 0
+    highlight.Parent = item
+end
+
+local function addImportantItemsToDroppedItems()
+    local droppedItems = game.Workspace.DroppedItems:GetDescendants()
+    for _, item in pairs(droppedItems) do
+        addImportant(item)
+    end
+end
+
+local grabRange = 10
+
+local MainTab = Window:CreateTab("Main", nil)
+
+Rayfield:Notify({
+    Title = "Loaded",
+    Content = "enjoy lil bro",
+    Duration = 6.5,
+    Image = 4483362458,
+    Actions = {
+        Ignore = {
+            Name = "Okay!",
+            Callback = function()
+                print("The user tapped Okay!")
+            end
+        },
+    },
+})
+
+local AutoGrabber = MainTab:CreateToggle({
+    Name = "Auto-Grabber",
+    CurrentValue = false,
+    Flag = "AutoGrabberToggleFlag",
+    Callback = function(Value)
+        settings.grabber = Value
+        while settings.grabber do
+            local character = game.Players.LocalPlayer.Character
+            if character then
+                local root = character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    for _, item in ipairs(game.Workspace.DroppedItems:GetChildren()) do
+                        if (item.Position - root.Position).magnitude <= grabRange then
+                            fireproximityprompt(item)
+                        end
+                    end
+                end
+            end
+            wait(0.1)
+        end
+    end,
+})
+
+local AntiAfk = MainTab:CreateButton({
+    Name = "Anti-Afk",
+    Callback = function(Value)
+        local Players = game:GetService("Players")
+        local VirtualUser = game:GetService("VirtualUser")
+
+        local GC = getconnections or get_signal_cons
+        if GC then
+            for i, v in pairs(GC(Players.LocalPlayer.Idled)) do
+                if v.Disable then
+                    v.Disable(v)
+                elseif v.Disconnect then
+                    v.Disconnect(v)
+                end
+            end
+        else
+            Players.LocalPlayer.Idled:Connect(function()
+                VirtualUser:CaptureController()
+                VirtualUser:ClickButton2(Vector2.new())
+            end)
+        end
+    end,
+})
+
+local OpenShop = MainTab:CreateButton({
+    Name = "Open Shop",
+    Callback = function(Value)
+        local shopPrompt = game.Workspace.Map.etc.Shop.Shopkeeper.HumanoidRootPart.ProximityPrompt
+        if shopPrompt then
+            fireproximityprompt(shopPrompt)
+        else
+            warn("Shop not found.")
+        end
+    end,
+})
+
+local OpenCauldron = MainTab:CreateButton({
+    Name = "Open Cauldron",
+    Callback = function(Value)
+        local cauldronPrompt = game.Workspace.CaveMap.WitchCave.Cauldron.Liquid.Attachment.ProximityPrompt
+        if cauldronPrompt then
+            fireproximityprompt(cauldronPrompt)
+        else
+            warn("Cauldron not found.")
+        end
+    end,
+})
+
+local ItemESP = MainTab:CreateButton({
+    Name = "Item ESP",
+    Callback = function(Value)
+        addImportantItemsToDroppedItems()
+        game.Workspace.DroppedItems.ChildAdded:Connect(function(item)
+            addImportant(item)
+        end)
+    end,
+})
+
+local ItemNotifier = MainTab:CreateButton({
+    Name = "Item Notifier",
+    Callback = function(Value)
+        Rayfield:Notify({
+            Title = "Item Spawned",
+            Content = "A " .. itemName .. " Has Spawned",
+            Duration = 3,
+            Image = 4483362458,
+            Actions = {
+                Ignore = {
+                    Name = "Okay!",
+                    Callback = function()
+                        print("The user tapped Okay!")
+                    end
+                },
+            },
+        })
+    end,
+})
+   end,
+})
+
+local Slider = MainTab:CreateSlider({
+   Name = "speed",
+   Range = {1, 30},
+   Increment = 1,
+   Suffix = "speed",
+   CurrentValue = 16,
+   Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = (Value)
+   end,
 })
